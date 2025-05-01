@@ -54,14 +54,15 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             icon: const Icon(Icons.chevron_right),
             onPressed: _nextWeek,
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
         ],
       ),
-
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: _showCreateEventDialog,
-      ),
-
+      floatingActionButton: _buildAddEventFAB(),
       body: Column(
         children: [
           _buildViewSelector(context),
@@ -78,9 +79,19 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                       for (var day in weekDays)
                         Expanded(
                           child: Center(
-                            child: Text(
-                              DateFormat('E MMM d').format(day), // e.g. "Sun Sep 4"
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            child: Column(
+                              children: [
+                                Text(
+                                  DateFormat('E MMM d').format(day),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  _findDayData(day)?.rotationalDay != null
+                                      ? 'Day ${_findDayData(day)!.rotationalDay!.dayNumber}'
+                                      : '',
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -186,6 +197,14 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     );
   }
 
+  /// Reusable FAB for adding events
+  Widget _buildAddEventFAB() {
+    return FloatingActionButton(
+      child: const Icon(Icons.add),
+      onPressed: _showCreateEventDialog,
+    );
+  }
+
   /// Builds the cell for a given [day, hour] as a Stack of event bars
   Widget _buildHourCell(DateTime day, int hour) {
     final dayData = _findDayData(day);
@@ -230,19 +249,24 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     return Positioned(
       top: topOffset,
       left: 0,
-      right: 0, 
+      right: 0,
       height: barHeight,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: _parseColor(event.color),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          event.name,
-          style: const TextStyle(fontSize: 10),
-          overflow: TextOverflow.ellipsis,
+      child: GestureDetector(
+        onLongPress: () {
+          _confirmDeleteEvent(event);
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: _parseColor(event.color),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            '${event.name} (${_formatHourFromString(event.startTime)} - ${_formatHourFromString(event.endTime)})',
+            style: const TextStyle(fontSize: 10),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
     );
@@ -302,6 +326,145 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     }
   }
 
+  String _formatHourFromString(String timeStr) {
+    // Assumes the input is already like "9:00 AM" or "2:30 PM"
+    return timeStr.trim();
+  }
+  
+  void _confirmDeleteEvent(EventModel event) {
+    if (event.recurrenceType == RecurrenceType.NONE) {
+      // Default single delete popup
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Delete Event"),
+          content: Text("Are you sure you want to delete '${event.name}'?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteEvent(event);
+                Navigator.pop(ctx);
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Offer delete options for recurring events
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Delete Recurring Event"),
+          content: Text("Do you want to delete just this instance of '${event.name}', all instances, or all future instances?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _deleteSingleInstance(event);
+                Navigator.pop(ctx);
+              },
+              child: const Text("Just this one"),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteAllMatchingEvents(event);
+                Navigator.pop(ctx);
+              },
+              child: const Text("All instances"),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteFutureMatchingEvents(event);
+                Navigator.pop(ctx);
+              },
+              child: const Text("All future"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancel"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+  
+  void _deleteEvent(EventModel event) {
+    setState(() {
+      for (var week in widget.fullSchedule.returnSchedule()) {
+        for (var day in week) {
+          day.events.removeWhere((e) =>
+            e.name == event.name &&
+            e.startTime == event.startTime &&
+            e.endTime == event.endTime &&
+            e.date == event.date && // Ensures it's this instance only
+            e.eventType == event.eventType &&
+            e.recurrenceType == event.recurrenceType);
+        }
+      }
+    });
+  }
+
+  void _deleteAllMatchingEvents(EventModel event) {
+    setState(() {
+      for (var week in widget.fullSchedule.returnSchedule()) {
+        for (var day in week) {
+          day.events.removeWhere((e) =>
+            e.name == event.name &&
+            e.startTime == event.startTime &&
+            e.endTime == event.endTime &&
+            e.eventType == event.eventType &&
+            e.recurrenceType == event.recurrenceType
+          );
+        }
+      }
+    });
+  }
+
+  void _deleteFutureMatchingEvents(EventModel event) {
+    final thisDate = DateTime.parse(event.date);
+    setState(() {
+      for (var week in widget.fullSchedule.returnSchedule()) {
+        for (var day in week) {
+          final dayDate = day.date;
+          if (!dayDate.isBefore(thisDate)) {
+            day.events.removeWhere((e) =>
+              e.name == event.name &&
+              e.startTime == event.startTime &&
+              e.endTime == event.endTime &&
+              e.eventType == event.eventType &&
+              e.recurrenceType == event.recurrenceType
+            );
+          }
+        }
+      }
+    });
+  }
+
+  void _deleteSingleInstance(EventModel event) {
+    final targetDate = DateTime.parse(event.date);
+    setState(() {
+      for (var week in widget.fullSchedule.returnSchedule()) {
+        for (var day in week) {
+          final d = day.date;
+          if (d.year == targetDate.year && d.month == targetDate.month && d.day == targetDate.day) {
+            day.events.removeWhere((e) =>
+              e.name == event.name &&
+              e.date == event.date &&
+              e.startTime == event.startTime &&
+              e.endTime == event.endTime &&
+              e.recurrenceType == event.recurrenceType
+            );
+          }
+        }
+      }
+    });
+  }
+
   // ---------------------------------------------------------------------------
   //  FAB - Create Event
   // ---------------------------------------------------------------------------
@@ -315,8 +478,8 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
 
     // Basic controllers
     final nameController = TextEditingController();
-    final startTimeController = TextEditingController(text: "09:00");
-    final endTimeController = TextEditingController(text: "10:00");
+    final startTimeController = TextEditingController(text: "9:00 AM");
+    final endTimeController = TextEditingController(text: "10:00 AM");
     final colorController = TextEditingController(text: "Blue");
 
     // We'll store which day the user picked
@@ -366,22 +529,61 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     const SizedBox(height: 8),
 
                     // Start Time
-                    TextField(
-                      controller: startTimeController,
-                      decoration: const InputDecoration(labelText: 'Start Time (HH:MM)'),
+                    DropdownButtonFormField<String>(
+                      value: startTimeController.text,
+                      items: _get12HourTimes().map((time) {
+                        return DropdownMenuItem<String>(
+                          value: time,
+                          child: Text(time),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() {
+                            startTimeController.text = value;
+                          });
+                        }
+                      },
+                      decoration: const InputDecoration(labelText: 'Start Time'),
                     ),
                     const SizedBox(height: 8),
 
                     // End Time
-                    TextField(
-                      controller: endTimeController,
-                      decoration: const InputDecoration(labelText: 'End Time (HH:MM)'),
+                    DropdownButtonFormField<String>(
+                      value: endTimeController.text,
+                      items: _get12HourTimes().map((time) {
+                        return DropdownMenuItem<String>(
+                          value: time,
+                          child: Text(time),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() {
+                            endTimeController.text = value;
+                          });
+                        }
+                      },
+                      decoration: const InputDecoration(labelText: 'End Time'),
                     ),
                     const SizedBox(height: 8),
 
-                    // Color
-                    TextField(
-                      controller: colorController,
+                    // Color (Dropdown)
+                    DropdownButtonFormField<String>(
+                      value: colorController.text,
+                      items: ['Blue', 'Red', 'Green', 'Orange', 'Yellow', 'Purple'].map((color) {
+                        return DropdownMenuItem<String>(
+                          value: color,
+                          child: Text(color),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() {
+                            colorController.text = value;
+                          });
+                        }
+                      },
                       decoration: const InputDecoration(labelText: 'Color'),
                     ),
                   ],
@@ -431,4 +633,15 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
       });
     }
   }
-}
+  }
+
+  List<String> _get12HourTimes() {
+    final times = <String>[];
+    for (int h = 0; h < 24; h++) {
+      final hour = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+      final suffix = h < 12 ? 'AM' : 'PM';
+      times.add('$hour:00 $suffix');
+      times.add('$hour:30 $suffix');
+    }
+    return times;
+  }

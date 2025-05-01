@@ -214,7 +214,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
                     // Show rotational day if present
                     final rotationText = (dayData?.rotationalDay != null)
-                        ? ' (Rot: ${dayData!.rotationalDay!.dayNumber})'
+                        ? ' (Day ${dayData!.rotationalDay!.dayNumber})'
                         : '';
 
                     return InkWell(

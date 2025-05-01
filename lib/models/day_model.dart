@@ -14,8 +14,8 @@ class DayModel {
   }) : events = events ?? [];
 
   /// Removes events by name, akin to removeEvent(String eventName) in Java.
-  void removeEvent(String eventName) {
-    events.removeWhere((e) => e.name == eventName);
+  void removeSingleEvent(String name, String date) {
+    events.removeWhere((e) => e.name == name && e.date == date);
   }
 
   void setRotationalDay(RotationalDayModel rd) {

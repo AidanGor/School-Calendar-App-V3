@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // Import your newly created screens:
 // import 'package:school_calendar_app_v3/screens/auth_gate.dart';    // <---
 import 'package:school_calendar_app_v3/screens/home_screen.dart';
+import 'package:school_calendar_app_v3/screens/settings_screen.dart';
 
 // Import your screens:
 import 'package:school_calendar_app_v3/screens/weekly_calendar_screen.dart';
@@ -120,6 +121,7 @@ class MyApp extends StatelessWidget {
           fullSchedule: fullSchedule,
           year: 2025,
         ),
+        
       }
     );
   }
