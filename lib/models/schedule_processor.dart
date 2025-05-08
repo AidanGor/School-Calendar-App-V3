@@ -1,4 +1,3 @@
-// schedule_processor.dart
 import 'package:intl/intl.dart';
 import 'package:school_calendar_app_v3/models/event_model.dart';
 import 'package:school_calendar_app_v3/models/full_schedule.dart';
@@ -14,7 +13,7 @@ class ScheduleProcessor {
 
   /// Assigns events to days in the schedule based on recurrence type.
   void assignEventsToSchedule() {
-    // If your EventModel stores date as String, parse it here with DateFormat
+  
     final formatter = DateFormat('yyyy-MM-dd');
 
     for (var week in fullSchedule.returnSchedule()) {

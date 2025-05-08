@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// Models (adjust imports to your actual file structure):
 import '../models/full_schedule.dart';
 import '../models/day_model.dart';
 import '../models/event_model.dart';
@@ -9,12 +8,6 @@ import '../models/off_days.dart';
 
 class MonthlyCalendarScreen extends StatefulWidget {
   final FullSchedule fullSchedule;
-  
-  // Remove displayedMonth from the constructor if you want it to start on the current month
-  // final DateTime displayedMonth;
-
-  // If you only want to show months from August 2025 to June 2026,
-  // you can pass them in or hardcode them here.
 
   const MonthlyCalendarScreen({
     super.key,
@@ -27,10 +20,8 @@ class MonthlyCalendarScreen extends StatefulWidget {
 }
 
 class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
-  // 1) Track the displayedMonth in State. We'll start at the current month by default.
   late DateTime displayedMonth;
 
-  // 2) (Optional) If you want to limit to Aug 2025 - June 2026, define boundaries:
   final startDate = DateTime.utc(2025, 8, 1);
   final endDate = DateTime.utc(2026, 6, 30);
 
@@ -50,11 +41,10 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    // Force the displayedMonth to a UTC date (for example, September 2025)
+    // Forces the displayedMonth to a UTC date
     displayedMonth = DateTime.utc(2025, 9);
   }
 
-  // monthly_calendar_screen.dart (within _MonthlyCalendarScreenState)
   Widget _buildViewSelector(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -77,7 +67,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
           const SizedBox(width: 8),
           OutlinedButton(
             onPressed: () {
-              // Already on Month -> maybe do nothing or show a snackBar
+            
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Already on Month!")),
               );
@@ -98,12 +88,10 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 3) Compute the first & last days of displayedMonth
-    // Force the first/last day of month in UTC:
     final firstDayOfMonth = DateTime.utc(displayedMonth.year, displayedMonth.month, 1);
     final lastDayOfMonth = DateTime.utc(displayedMonth.year, displayedMonth.month + 1, 0);
 
-    // Find the Sunday on/before firstDayOfMonth:
+    // Finds the Sunday on/before firstDayOfMonth:
     DateTime startDate = firstDayOfMonth;
     while (startDate.weekday != DateTime.sunday) {
       // Subtract a day, then recreate as UTC:
@@ -111,26 +99,24 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
       startDate = DateTime.utc(startDate.year, startDate.month, startDate.day);
     }
 
-    // Find the Saturday on/after lastDayOfMonth:
+    // Finds the Saturday on/after lastDayOfMonth:
     DateTime endDate = lastDayOfMonth;
     while (endDate.weekday != DateTime.saturday) {
       endDate = endDate.add(const Duration(days: 1));
       endDate = DateTime.utc(endDate.year, endDate.month, endDate.day);
     }
 
-    // Build the list of days from startDate to endDate:
+    // Builds the list of days from startDate to endDate:
     final days = <DateTime>[];
     DateTime current = startDate;
     while (!current.isAfter(endDate)) {
       days.add(current);
-      // Move forward a day, forcing UTC at midnight
       final next = current.add(const Duration(days: 1));
       current = DateTime.utc(next.year, next.month, next.day);
     }
 
     return Scaffold(
       appBar: AppBar(
-        // 4) Show the month name, plus arrow buttons for navigation
         leading: IconButton(
           icon: const Icon(Icons.chevron_left),
           onPressed: _previousMonth,
@@ -160,19 +146,11 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // We have 'days.length' total days to display, each row has 7 columns
                 final totalDays = days.length;
-                // Number of rows = totalDays / 7, rounded up
                 final rows = (totalDays / 7).ceil();
-
-                // Each cell's width = total width / 7
                 final itemWidth = constraints.maxWidth / 7;
-                // Each cell's height = total height / number of rows
                 final itemHeight = constraints.maxHeight / rows;
-
-                // childAspectRatio = width / height
                 final ratio = itemWidth / itemHeight;
-
                 return GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: totalDays,
@@ -186,7 +164,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                     final dayData = _findDayData(day);
                     final isOffDay = OffDays.isOffDay(day);
 
-                    // Decide the background color
+                    // Decides the background color
                     Color backgroundColor;
                     bool isWeekend = (day.weekday == DateTime.saturday || day.weekday == DateTime.sunday);
                     if (!isCurrentMonth) {
@@ -201,7 +179,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                       backgroundColor = Colors.white;         // Normal school day
                     }
 
-                    // Gather event widgets
+                    // Gathers event widgets
                     final eventWidgets = <Widget>[];
                     if (dayData != null && dayData.events.isNotEmpty) {
                       for (var ev in dayData.events) {
@@ -212,7 +190,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                       }
                     }
 
-                    // Show rotational day if present
+                    // Shows rotational day if present
                     final rotationText = (dayData?.rotationalDay != null)
                         ? ' (Day ${dayData!.rotationalDay!.dayNumber})'
                         : '';
@@ -224,7 +202,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
-                          color: backgroundColor, // <-- updated
+                          color: backgroundColor,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,49 +255,39 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     final month = displayedMonth.month == 1 ? 12 : displayedMonth.month - 1;
     final newYear = (displayedMonth.month == 1) ? (year - 1) : year;
     final newMonth = DateTime(newYear, month, 1);
-
-    // If you want to clamp to [minDate, maxDate], do:
-    // if (newMonth.isBefore(minDate)) return;
-    // Otherwise, remove the check for continuous navigation
     setState(() {
       displayedMonth = newMonth;
     });
   }
 
-  /// Navigate to next month
   void _nextMonth() {
     final year = displayedMonth.year;
     final month = displayedMonth.month == 12 ? 1 : displayedMonth.month + 1;
     final newYear = (displayedMonth.month == 12) ? (year + 1) : year;
     final newMonth = DateTime(newYear, month, 1);
-
-    // If you want to clamp to [minDate, maxDate], do:
-    // if (newMonth.isAfter(maxDate)) return;
-    // Otherwise, remove the check for continuous navigation
     setState(() {
       displayedMonth = newMonth;
     });
   }
 
-  /// Show a dialog to create an event (no specific day selected).
   void _showCreateEventDialog(BuildContext context) {
-    // Controllers for text fields
+
     final nameController = TextEditingController();
     final eventTypeController = TextEditingController();
     final startTimeController = TextEditingController(text: '09:00');
     final endTimeController = TextEditingController(text: '10:00');
     final colorController = TextEditingController(text: 'Orange');
 
-    // For date picking
+
     DateTime selectedDate = DateTime.now();
 
-    // For recurrence type
+    
     RecurrenceType selectedRecurrence = RecurrenceType.NONE;
 
-    // If ROTATIONAL is selected, user can specify which rotational day (1–7).
+    // If ROTATIONAL is selected, the user can specify which rotational day (1–7).
     int rotationalDay = 1;
 
-    // If WEEKDAY is selected, user can specify which weekday (Mon=1 ... Sun=7 in Dart).
+    // If WEEKDAY is selected, the user can specify which weekday
     int selectedWeekday = 1;
 
     showDialog(
@@ -327,10 +295,10 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            // Helper to update state inside the dialog
+            
             void updateDialogState(void Function() fn) {
               setDialogState(fn);
-              setState(() {}); // also rebuild parent if needed
+              setState(() {}); 
             }
 
             return AlertDialog(
@@ -339,13 +307,13 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // NAME
+               
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(labelText: 'Event Name'),
                     ),
                     const SizedBox(height: 8),
-                    // DATE PICKER
+                
                     Row(
                       children: [
                         Expanded(
@@ -372,13 +340,13 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // EVENT TYPE
+                    
                     TextField(
                       controller: eventTypeController,
                       decoration: const InputDecoration(labelText: 'Event Type'),
                     ),
                     const SizedBox(height: 8),
-                    // RECURRENCE TYPE DROPDOWN
+                    
                     Row(
                       children: [
                         const Text('Recurrence:'),
@@ -388,7 +356,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                           items: RecurrenceType.values.map((rt) {
                             return DropdownMenuItem(
                               value: rt,
-                              child: Text(rt.name), // .name is from Dart 2.15+ or use rt.toString()
+                              child: Text(rt.name), 
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -402,7 +370,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // IF ROTATIONAL: ask user for dayNumber
+                   
                     if (selectedRecurrence == RecurrenceType.ROTATIONAL)
                       Row(
                         children: [
@@ -422,7 +390,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                           ),
                         ],
                       ),
-                    // IF WEEKDAY: ask user for dayOfWeek
+                   
                     if (selectedRecurrence == RecurrenceType.WEEKDAY)
                       Row(
                         children: [
@@ -481,7 +449,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
                         startTime: startTimeController.text.trim(),
                         endTime: endTimeController.text.trim(),
                         color: colorController.text.trim(),
-                        // For rotational or weekday:
+                        
                         rotationalDay: (selectedRecurrence == RecurrenceType.ROTATIONAL)
                             ? rotationalDay
                             : null,
@@ -502,7 +470,6 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     );
   }
 
-  /// Tapping a day cell => show existing events & "Add Event"
   void _onDayTap(BuildContext context, DateTime day) {
     final dayData = _findDayData(day);
     if (dayData == null) return;
@@ -547,17 +514,16 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
   /// Dialog for adding an event to a specific day
   void _showCreateEventForDay(BuildContext context, DateTime day) {
-    // Controllers
+
     final nameController = TextEditingController();
     final eventTypeController = TextEditingController();
     final startTimeController = TextEditingController(text: '09:00');
     final endTimeController = TextEditingController(text: '10:00');
     final colorController = TextEditingController(text: 'Orange');
 
-    // This dialog fixes the date to the chosen day
+    
     final DateTime selectedDate = day;
 
-    // Recurrence type
     RecurrenceType selectedRecurrence = RecurrenceType.NONE;
     int rotationalDay = 1;
     int selectedWeekday = 1;
@@ -709,16 +675,13 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
   /// Adds a newly created event and rebuilds
   void _addEventToSchedule(EventModel event) {
-    // We'll parse the date in case we need it for NONE recurrence.
     final parsedDate = DateFormat('yyyy-MM-dd').parse(event.date);
-
-    // Get the schedule data once (for convenience).
     final schedule = widget.fullSchedule.returnSchedule();
 
     setState(() {
       switch (event.recurrenceType) {
         case RecurrenceType.NONE:
-          // Only add to the single date chosen
+       
           final dayData = _findDayData(parsedDate);
           if (dayData != null) {
             dayData.events.add(event);
@@ -726,9 +689,8 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
           break;
 
         case RecurrenceType.ROTATIONAL:
-          // Add to EVERY day that has the matching rotational day number
-          // e.g. if event.rotationalDay == 3, add to all DayModels with day.rotationalDay.dayNumber == 3
-          if (event.rotationalDay == null) return; // sanity check
+          
+          if (event.rotationalDay == null) return; 
 
           for (var week in schedule) {
             for (var dayModel in week) {
@@ -741,9 +703,8 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
           break;
 
         case RecurrenceType.WEEKDAY:
-          // Add to EVERY day that has the same weekday (Mon=1..Sun=7)
-          // e.g. if event.weekDay == 2, add to all DayModels whose date.weekday == 2
-          if (event.weekDay == null) return; // sanity check
+      
+          if (event.weekDay == null) return;
 
           for (var week in schedule) {
             for (var dayModel in week) {

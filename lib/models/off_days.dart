@@ -1,11 +1,8 @@
-// off_days.dart
-
-/// Manages a set of off-day [DateTime]s.
 class OffDays {
-  /// A static set of off days.
+
   static final Set<DateTime> offDays = {};
 
-  // Populates the offDays set, similar to your static block in Java
+
   static void initializeOffDays() {
     // Single days
     addOffDay(DateTime(2025, 9, 23));

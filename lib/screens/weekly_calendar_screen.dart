@@ -23,19 +23,18 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
   final int startHour = 0;
   final int endHour = 23;
 
-  // We track the currently displayed week here
   late DateTime currentStartOfWeek;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with the startOfWeek passed into the widget
+    // Initializes with the startOfWeek passed into the widget
     currentStartOfWeek = widget.startOfWeek;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Build a list of the 7 days in this week (e.g., Sunday..Saturday)
+    // Builds a list of the 7 days in this week 
     List<DateTime> weekDays = List.generate(7, (i) {
       return currentStartOfWeek.add(Duration(days: i));
     });
@@ -72,10 +71,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
               scrollDirection: Axis.vertical,
               child: Column(
                 children: [
-                  // Row of day headers
+                  
                   Row(
                     children: [
-                      const SizedBox(width: 60), // blank space for hour labels
+                      const SizedBox(width: 60), 
                       for (var day in weekDays)
                         Expanded(
                           child: Center(
@@ -98,12 +97,12 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     ],
                   ),
 
-                  // For each hour, create a row
+                 
                   for (int hour = startHour; hour <= endHour; hour++)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Hour label in 12-hour format
+                    
                         SizedBox(
                           width: 60,
                           child: Text(
@@ -111,15 +110,15 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                             textAlign: TextAlign.right,
                           ),
                         ),
-                        // 7 columns for each day
+                        
                         for (var day in weekDays)
                           Expanded(
                             child: Container(
-                              height: 60, // each hour row is 60px tall
+                              height: 60, 
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey.shade300),
                               ),
-                              // Use a Stack to position event bars
+                             
                               child: _buildHourCell(day, hour),
                             ),
                           ),
@@ -134,23 +133,19 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     );
   }
 
-  /// Move back one week
+  // Moves backwards one week
   void _previousWeek() {
     setState(() {
       currentStartOfWeek = currentStartOfWeek.subtract(const Duration(days: 7));
     });
   }
 
-  /// Move forward one week
+  /// Moves forward one week
   void _nextWeek() {
     setState(() {
       currentStartOfWeek = currentStartOfWeek.add(const Duration(days: 7));
     });
   }
-
-  // ---------------------------------------------------------------------------
-  //  Build Methods
-  // ---------------------------------------------------------------------------
 
   Widget _buildViewSelector(BuildContext context) {
     return Padding(
@@ -169,7 +164,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
           // Week
           OutlinedButton(
             onPressed: () {
-              // Already on Week
+              
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Already on Week view!')),
               );
@@ -197,7 +192,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     );
   }
 
-  /// Reusable FAB for adding events
+  /// FAB for adding events
   Widget _buildAddEventFAB() {
     return FloatingActionButton(
       child: const Icon(Icons.add),
@@ -230,12 +225,11 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     );
   }
 
-  /// Builds a single event bar (Positioned) within the hour cell
+  /// Builds a single event bar within the hour cell
   Widget _buildEventBar(EventModel event, int hourCell) {
     final (startH, startM) = _parseTime(event.startTime);
     final (endH, endM) = _parseTime(event.endTime);
 
-    // The hour cell covers [hourCell : hourCell+1).
     final cellStartMin = (hourCell == startH) ? startM : 0;
     final cellEndMin = (hourCell == endH) ? endM : 60;
 
@@ -271,10 +265,6 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
       ),
     );
   }
-
-  // ---------------------------------------------------------------------------
-  //  Utility Methods
-  // ---------------------------------------------------------------------------
 
   DayModel? _findDayData(DateTime day) {
     for (var week in widget.fullSchedule.returnSchedule()) {
@@ -327,13 +317,13 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
   }
 
   String _formatHourFromString(String timeStr) {
-    // Assumes the input is already like "9:00 AM" or "2:30 PM"
+   
     return timeStr.trim();
   }
   
   void _confirmDeleteEvent(EventModel event) {
     if (event.recurrenceType == RecurrenceType.NONE) {
-      // Default single delete popup
+   
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -355,7 +345,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
         ),
       );
     } else {
-      // Offer delete options for recurring events
+      // Offers delete options for recurring events
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -401,7 +391,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             e.name == event.name &&
             e.startTime == event.startTime &&
             e.endTime == event.endTime &&
-            e.date == event.date && // Ensures it's this instance only
+            e.date == event.date &&
             e.eventType == event.eventType &&
             e.recurrenceType == event.recurrenceType);
         }
@@ -465,25 +455,18 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  //  FAB - Create Event
-  // ---------------------------------------------------------------------------
   void _showCreateEventDialog() {
-    // We'll implement a basic form with name, date, startTime, endTime, color
-    // By default, date is one of the 7 days in the displayed week
-    // We'll let the user pick from a dropdown
+    
     final daysInWeek = List.generate(7, (i) {
       return currentStartOfWeek.add(Duration(days: i));
     });
 
-    // Basic controllers
     final nameController = TextEditingController();
     final startTimeController = TextEditingController(text: "9:00 AM");
     final endTimeController = TextEditingController(text: "10:00 AM");
     final colorController = TextEditingController(text: "Blue");
 
-    // We'll store which day the user picked
-    DateTime selectedDay = daysInWeek[0]; // default to first day in the week
+    DateTime selectedDay = daysInWeek[0]; 
 
     showDialog(
       context: context,
@@ -598,10 +581,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   onPressed: () {
                     final eventName = nameController.text.trim();
                     if (eventName.isNotEmpty) {
-                      // Build an EventModel
+                      // Builds an EventModel
                       final newEvent = EventModel(
                         name: eventName,
-                        // We'll store date as "yyyy-MM-dd"
+                        
                         date: DateFormat('yyyy-MM-dd').format(selectedDay),
                         eventType: 'UserCreated',
                         recurrenceType: RecurrenceType.NONE, // for now

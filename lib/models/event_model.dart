@@ -1,4 +1,3 @@
-// event_model.dart
 enum RecurrenceType {
   NONE,
   ROTATIONAL,
@@ -7,7 +6,7 @@ enum RecurrenceType {
 
 class EventModel {
   final String name;
-  final String date;        // Alternatively, DateTime if you prefer
+  final String date;       
   final String eventType;
   final RecurrenceType recurrenceType;
   final String startTime;

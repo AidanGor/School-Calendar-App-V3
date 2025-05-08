@@ -6,7 +6,7 @@ import '../models/day_model.dart';
 
 class YearCalendarScreen extends StatefulWidget {
   final FullSchedule fullSchedule;
-  final int year; // e.g. 2025
+  final int year; 
 
   const YearCalendarScreen({
     Key? key,
@@ -65,7 +65,7 @@ class _YearCalendarScreenState extends State<YearCalendarScreen> {
           const SizedBox(width: 8),
           OutlinedButton(
             onPressed: () {
-              // Already on Year -> show a SnackBar
+              
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Already on Year view!")),
               );
@@ -78,16 +78,16 @@ class _YearCalendarScreenState extends State<YearCalendarScreen> {
   }
 
   Widget _buildYearGrid() {
-    // Build a list of 12 months
+    // Builds a list of 12 months
     final months = List.generate(12, (i) => DateTime(widget.year, i + 1, 1));
 
-    // Display them in a 3x4 grid
+    // Displays them in a 3x4 grid
     return GridView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: 12,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3, // 3 columns
-        childAspectRatio: 1.3, // adjust to taste
+        childAspectRatio: 1.3, // can be adjusted
       ),
       itemBuilder: (context, index) {
         final monthDate = months[index];
@@ -97,24 +97,12 @@ class _YearCalendarScreenState extends State<YearCalendarScreen> {
   }
 
   Widget _buildMonthTile(DateTime monthDate) {
-    final monthName = DateFormat('MMMM').format(monthDate); // e.g. "January"
+    final monthName = DateFormat('MMMM').format(monthDate); 
     return InkWell(
       onTap: () {
-        // Navigate to your MonthlyCalendarScreen for that month
-        // e.g. pass a route or direct constructor. For example:
+        
         Navigator.pushNamed(context, '/month'); 
-        // Or a direct approach:
-        /*
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MonthlyCalendarScreen(
-              fullSchedule: widget.fullSchedule,
-              // If your monthly screen can accept a displayedMonth param, pass it
-            ),
-          ),
-        );
-        */
+       
       },
       child: Card(
         margin: const EdgeInsets.all(4),

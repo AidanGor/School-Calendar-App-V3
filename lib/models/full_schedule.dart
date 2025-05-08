@@ -1,4 +1,3 @@
-// full_schedule.dart
 import 'package:school_calendar_app_v3/models/day_model.dart';
 import 'package:school_calendar_app_v3/models/off_days.dart';
 import 'package:school_calendar_app_v3/models/rotational_schedule.dart';

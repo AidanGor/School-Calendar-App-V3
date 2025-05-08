@@ -20,8 +20,7 @@ class DayCalendarScreen extends StatefulWidget {
 }
 
 class _DayCalendarScreenState extends State<DayCalendarScreen> {
-  // For a day view, you might want to display hours 0..23 in a column,
-  // or just a list of events for the day. We'll do a simple hour-based layout.
+ 
   final int startHour = 0;
   final int endHour = 23;
 
@@ -67,7 +66,7 @@ class _DayCalendarScreenState extends State<DayCalendarScreen> {
         children: [
           OutlinedButton(
             onPressed: () {
-              // Already on Day -> do nothing or show a snackbar
+            
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Already on Day view!")),
               );
@@ -103,11 +102,11 @@ class _DayCalendarScreenState extends State<DayCalendarScreen> {
   Widget _buildDayLayout() {
     final d = dayData;
     if (d == null) {
-      // No data for this date -> show a placeholder
+      
       return Center(child: Text("No schedule data for this day."));
     }
 
-    // If you want an hour-by-hour layout (like WeeklyCalendarScreen):
+    
     return SingleChildScrollView(
       child: Column(
         children: [

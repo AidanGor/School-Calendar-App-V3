@@ -1,4 +1,3 @@
-// rotational_day_model.dart
 import 'package:school_calendar_app_v3/models/event_model.dart';
 
 class RotationalDayModel {
